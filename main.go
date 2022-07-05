@@ -13,9 +13,11 @@ var (
 	ctx    = context.Background()
 	server = flag.String("server", "localhost:6379", "redis服务器地址")
 	db     = flag.Int("db", 0, "redis选库")
+	count  = flag.Int64("count", 1000, "redis count")
 	size   = flag.Int64("size", 10240, "redis大键大小")
 	pass   = flag.String("pass", "", "redisl连接密码")
-	save   = flag.Bool("save", false, "是否到文件output.log")
+	fname  = flag.String("fname", "output.log", "保存存文件名")
+	save   = flag.Bool("save", false, "是否到文件")
 )
 
 func init() {
@@ -29,9 +31,9 @@ func init() {
 }
 
 func main() {
-	output, _ := os.OpenFile("./output.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	output, _ := os.OpenFile("./"+*fname, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	defer output.Close()
-	iter := rdb.Scan(ctx, 0, "*", 0).Iterator()
+	iter := rdb.Scan(ctx, 0, "*", *count).Iterator()
 	for iter.Next(ctx) {
 		gsize, _ := rdb.MemoryUsage(ctx, iter.Val()).Result()
 		if gsize > *size {
